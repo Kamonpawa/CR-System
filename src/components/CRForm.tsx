@@ -41,8 +41,8 @@ export default function CRForm({ currentUser, onSubmit, onCancel, editingCR }: C
       setRequesterName(editingCR.requesterName);
       setRequesterEmail(editingCR.requesterEmail);
     } else if (currentUser) {
-      setRequesterName(currentUser.displayName || '');
-      setRequesterEmail(currentUser.email || '');
+      setRequesterName(currentUser.displayName || 'ผู้ทดสอบระบบ (Demo User)');
+      setRequesterEmail(currentUser.email || 'demo@example.com');
     }
   }, [currentUser, editingCR]);
 

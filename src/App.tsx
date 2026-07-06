@@ -4,6 +4,8 @@ import {
   signInWithPopup, 
   onAuthStateChanged, 
   signOut, 
+  signInAnonymously,
+  updateProfile,
   User as FirebaseUser 
 } from 'firebase/auth';
 import { 
@@ -38,11 +40,17 @@ export default function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isInIframe, setIsInIframe] = useState(false);
 
   // Layout tabs
   const [activeTab, setActiveTab] = useState<string>('dashboard'); // dashboard, list, form, detail
   const [selectedCR, setSelectedCR] = useState<ChangeRequest | null>(null);
   const [editingCR, setEditingCR] = useState<ChangeRequest | undefined>(undefined);
+
+  // Detect iframe context on mount
+  useEffect(() => {
+    setIsInIframe(window.self !== window.top);
+  }, []);
 
   // 1. Authenticate Listeners
   useEffect(() => {
@@ -106,7 +114,28 @@ export default function App() {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       console.error('Authentication Error:', err);
-      alert('การเข้าสู่ระบบผ่าน Google Account ล้มเหลว โปรดตรวจสอบสิทธิ์การตั้งค่า iFrame หรือเครือข่าย');
+      alert('การเข้าสู่ระบบผ่าน Google Account ล้มเหลว โปรดตรวจสอบสิทธิ์การตั้งค่า iFrame หรือเครือข่าย\n\nแนะนำให้คลิกปุ่ม "เปิดระบบในแท็บใหม่" ด้านล่างเพื่อเข้าสู่ระบบได้อย่างถูกต้องผ่านแท็บหลัก');
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    try {
+      setIsAuthLoading(true);
+      const userCredential = await signInAnonymously(auth);
+      if (userCredential.user && !userCredential.user.displayName) {
+        await updateProfile(userCredential.user, {
+          displayName: 'ผู้ทดสอบระบบ (Demo User)'
+        });
+        setCurrentUser({
+          ...userCredential.user,
+          displayName: 'ผู้ทดสอบระบบ (Demo User)'
+        } as FirebaseUser);
+      }
+    } catch (err) {
+      console.error('Demo Login Error:', err);
+      alert('ไม่สามารถเปิดใช้งานโหมดเข้าสู่ระบบจำลองสำหรับการทดสอบได้ในขณะนี้');
     } finally {
       setIsAuthLoading(false);
     }
@@ -528,7 +557,38 @@ export default function App() {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-100">
+            {isInIframe && (
+              <div className="bg-amber-50/75 border border-amber-200/80 rounded-2xl p-4 text-xs text-amber-900/90 font-sans space-y-2.5 mt-2 leading-relaxed shadow-sm">
+                <div className="flex items-center gap-1.5 font-bold text-amber-800">
+                  <Shield className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>ตรวจพบระบบทำงานในหน้าต่าง Preview (iFrame)</span>
+                </div>
+                <p>
+                  เพื่อความปลอดภัยและหลีกเลี่ยงข้อจำกัดการบล็อกหน้าต่างป็อปอัป (Popup) ของเบราว์เซอร์ แนะนำวิธีการเข้าใช้งานดังนี้:
+                </p>
+                <div className="pt-1.5 flex flex-col gap-2">
+                  <a
+                    href={window.location.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold rounded-lg transition-colors shadow-sm"
+                  >
+                    <Layers className="w-3.5 h-3.5" />
+                    เปิดระบบในแท็บใหม่เพื่อล็อกอิน Google (แนะนำ)
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleDemoLogin}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 active:bg-slate-950 text-white font-semibold rounded-lg transition-colors shadow-sm cursor-pointer"
+                  >
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    หรือเข้าใช้งานด่วนด้วยบัญชีจำลอง (ไม่ต้องล็อกอิน)
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="pt-6 border-t border-slate-100 space-y-3">
               <button
                 id="login-google-btn"
                 onClick={handleLogin}
@@ -554,6 +614,16 @@ export default function App() {
                 </svg>
                 เข้าสู่ระบบด้วยบัญชี Gmail (Google SSO)
               </button>
+
+              {!isInIframe && (
+                <button
+                  type="button"
+                  onClick={handleDemoLogin}
+                  className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-100 font-medium"
+                >
+                  หรือเข้าใช้ระบบด้วยบัญชีผู้ทดสอบจำลอง (Demo Mode)
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -636,8 +706,8 @@ export default function App() {
             {/* Profile User Panel */}
             <div className="flex items-center gap-3" id="profile-user-panel">
               <div className="text-right hidden sm:block">
-                <p className="text-xs font-semibold text-slate-100">{currentUser.displayName || currentUser.email}</p>
-                <p className="text-[10px] text-slate-400 font-mono mt-0.5">{currentUser.email}</p>
+                <p className="text-xs font-semibold text-slate-100">{currentUser.displayName || currentUser.email || 'ผู้ทดสอบระบบ (Demo)'}</p>
+                <p className="text-[10px] text-slate-400 font-mono mt-0.5">{currentUser.email || 'demo@example.com'}</p>
               </div>
 
               <button
