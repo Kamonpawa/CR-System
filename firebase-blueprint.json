@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "ChangeRequest": {
+      "title": "Change Request",
+      "description": "IT Change Request Document detailing system modifications, justifications, impact, assignee, comments, and action histories.",
+      "type": "object",
+      "properties": {
+        "crNumber": {
+          "type": "string",
+          "description": "Unique auto-generated sequential change request number (format: CR-YYYY-XXXX)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the proposed change request"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed explanation of requirements or issues"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Justification or reason for the change"
+        },
+        "systemName": {
+          "type": "string",
+          "description": "Target computer system, application, or system module to be modified"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["bugfix", "feature", "improvement", "security", "other"],
+          "description": "Type of work or category of modification"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "urgent"],
+          "description": "Level of urgency or business priority"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "pending", "approved", "rejected", "in_progress", "completed", "cancelled"],
+          "description": "Current workflow status of the change request"
+        },
+        "requesterName": {
+          "type": "string",
+          "description": "Full name of the request submitter"
+        },
+        "requesterEmail": {
+          "type": "string",
+          "description": "Email address of the request submitter"
+        },
+        "impactAnalysis": {
+          "type": "string",
+          "description": "Analysis of potential system or operations impact"
+        },
+        "assignedTo": {
+          "type": "string",
+          "description": "Name of the assigned engineer or developer"
+        },
+        "assignedEmail": {
+          "type": "string",
+          "description": "Email of the assigned engineer or developer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 last update timestamp"
+        },
+        "comments": {
+          "type": "array",
+          "description": "Collection of discussion comments from system team members"
+        },
+        "history": {
+          "type": "array",
+          "description": "Audit trail log of actions taken on the document"
+        }
+      },
+      "required": [
+        "crNumber",
+        "title",
+        "description",
+        "reason",
+        "systemName",
+        "category",
+        "priority",
+        "status",
+        "requesterName",
+        "requesterEmail",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/change_requests/{changeRequestId}": {
+      "schema": "ChangeRequest",
+      "description": "Collection of computer system change requests logs and workflows."
+    }
+  }
+}

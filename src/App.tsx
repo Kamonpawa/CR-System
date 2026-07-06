@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { auth, db, googleProvider } from './lib/firebase';
+import { auth, db, googleProvider, handleFirestoreError, OperationType } from './lib/firebase';
 import { 
   signInWithPopup, 
   onAuthStateChanged, 
@@ -93,6 +93,7 @@ export default function App() {
     }, (err) => {
       console.error('Firestore reading error:', err);
       setIsLoadingData(false);
+      handleFirestoreError(err, OperationType.GET, 'change_requests');
     });
 
     return () => unsubscribe();
@@ -205,6 +206,7 @@ export default function App() {
     } catch (err) {
       console.error('Error writing CR to database:', err);
       alert('ไม่สามารถจัดเก็บข้อมูลลงในระบบได้ โปรดตรวจสอบสิทธิ์เชื่อมต่อเครือข่าย');
+      handleFirestoreError(err, OperationType.WRITE, 'change_requests');
     }
   };
 
@@ -249,6 +251,7 @@ export default function App() {
     } catch (err) {
       console.error('Update status failed:', err);
       alert('ไม่สามารถอัปเดตสถานะการอนุมัติงานได้ในขณะนี้');
+      handleFirestoreError(err, OperationType.WRITE, `change_requests/${crId}`);
     }
   };
 
@@ -292,6 +295,7 @@ export default function App() {
     } catch (err) {
       console.error('Developer assignment failed:', err);
       alert('ไม่สามารถบันทึกข้อมูลมอบหมายงานได้');
+      handleFirestoreError(err, OperationType.WRITE, `change_requests/${crId}`);
     }
   };
 
@@ -343,6 +347,7 @@ export default function App() {
     } catch (err) {
       console.error('Comment adding failed:', err);
       alert('บันทึกความเห็นล้มเหลว');
+      handleFirestoreError(err, OperationType.WRITE, `change_requests/${crId}`);
     }
   };
 
